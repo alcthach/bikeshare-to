@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# Something weird is going on here. I can run the command from terminal but not out of this script...
+# Looks like an issue with finding ./pgfutter directory...
+
+FILE=~/work/projects/bikeshare/data/raw/bikeshare_ridership_2017_Q1.csv
+DBNAME=bikeshare
+TABLENAME=temp_table
+SCHEMA=public
+
+cd ~
+./pgfutter --db $DBNAME --schema $SCHEMA --table $TABLENAME csv $FILE
+
+echo "$FILE has been loaded successfully to $DBNAME." 
+
+
