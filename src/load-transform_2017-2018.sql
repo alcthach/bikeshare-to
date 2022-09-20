@@ -17,7 +17,7 @@ ALTER TABLE temp_table ALTER COLUMN trip_start_time TYPE TIMESTAMP WITHOUT time 
 ALTER TABLE temp_table DROP COLUMN trip_start_time_holder;
 	
 
--- Transform trip_spot_time
+-- Transform trip_stop_time
 ALTER TABLE temp_table ADD COLUMN trip_stop_time_holder TIMESTAMP WITHOUT time ZONE NULL;
 UPDATE temp_table SET trip_stop_time_holder = trip_stop_time::TIMESTAMP;
 ALTER TABLE temp_table ALTER COLUMN trip_stop_time TYPE TIMESTAMP WITHOUT time ZONE USING trip_stop_time_holder;
