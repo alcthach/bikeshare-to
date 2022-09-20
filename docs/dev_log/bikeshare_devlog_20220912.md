@@ -57,6 +57,10 @@ Silly me trying to find the data that `pgfutter` outputted 😅
 
 It actually lives in a database called `imports`. Thank goodness I remember some of my SQL syntax!
 
+``` bash
+sudosd
+```
+
 ``` terminal
 athach@fedora ~]$ ./pgfutter --host "localhost" --port "5432" --db "bikeshare" --schema "public" --table 
 "tips" --user "postgres" --pw "admin" csv /tmp/bikeshare_ridership_2017_Q1.csv
@@ -121,3 +125,9 @@ From here,
 - And write the data from the imported table to the main table appropriately...
 - Also ensure that the csv is written to a table names `temp_table` or something of that effect in order to write a procedure or a function that will move the data over to the main table
 - Some solutions to consider: https://stackoverflow.com/questions/21018256/can-i-automatically-create-a-table-in-postgresql-from-a-csv-file-with-headers
+
+Alright so it looks like I got my script to load csv to the database correctly. From there I need to initialize a main table where all the rows will live after they've been processed.
+
+- What's interesting is that `pgfutter` did not identify what the data types were that were going in
+- I'll take a moment to look into this b/c I'll need to initialize the main table here
+
