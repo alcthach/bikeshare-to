@@ -8,16 +8,16 @@ Created: 2022-09-11
 
 -- This is going to be the main table that I load all the trip table to
 CREATE TABLE IF NOT EXISTS trips (
-	trip_id,			
-	trip_duration,
-	start_station_id,
-	start_time,
-	start_station_name,
-	end_station_id,
-	end_time,
-	end_station_name,
-	bike_id,
-	user_type
+	trip_id			varchar,			
+	trip_duration		int,
+	start_station_id	varchar,
+	start_time		timestamp,
+	start_station_name	varchar,
+	end_station_id		varchar,
+	end_time		timestamp,
+	end_station_name	varchar,
+	bike_id			varchar,
+	user_type		varchar
 );
 	
 -- CREATE TEMP TABLE IF NOT EXISTS temp_table(
