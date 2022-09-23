@@ -31,15 +31,7 @@ SELECT *
 FROM start_time_exploded ste; 
 
 
--- NOTE: Doesn't save the first entry in the partition but that's okay``367
-SELECT *
-FROM 
-	(
-	SELECT  
-	   DISTINCT ON (start_time_substring1, start_time_substring2) trip_id, start_time_substring1, start_time_substring2, trip_start_time
-	FROM start_time_exploded ste
-	) AS temp1
-ORDER BY trip_id ASC;
+-- NOTE: Doesn't save the first entry in the partition but that's okay
 
 
 -- This is where the date format changes to DD/MM/YYYY, from MM/DD/YYYY
@@ -66,17 +58,37 @@ FROM
 		) AS temp1
 	WHERE start_time_substring1 >= 7 AND start_time_substring2 >= 2
 	ORDER BY trip_id ASC) AS t2
-WHERE start_time_substring1 > 12;
+WHERE start_time_substring1 > 12; 
+
+SELECT COUNT(*)
+FROM start_time_exploded ste;
 
 
+SELECT *
+FROM start_time_exploded ste 
+WHERE trip_id > 1252111;
 
+-- Count total 
+SELECT COUNT(*)
+FROM
+(
+SELECT *
+FROM start_time_exploded ste 
+WHERE trip_id > 1253914 
+ORDER BY trip_id ASC) AS t3;
 
-
-
-
-
-
-
+-- Checking to ensure this partition does not violate the DD/MM/YYYY format
+SELECT *
+FROM
+	(SELECT *
+	FROM 
+		(
+		SELECT  
+		   DISTINCT ON (start_time_substring1, start_time_substring2) trip_id, start_time_substring1, start_time_substring2, trip_start_time
+		FROM start_time_exploded ste
+		) AS temp_4
+	WHERE trip_id >= 1253914
+	ORDER BY trip_id ASC) AS t2;
 
 -- Makes a bit more sense now, with March 13 being a reasonable time for customers to start using Bikeshare again
 -- In that case, with `trip_id` being ordered by ascending, I feel comfortable with making the assumption that the trips are in the correct ORDER 
@@ -99,6 +111,3 @@ WHERE start_time_substring1 > 12;
 -- Another important thing to note is that when I order `trip_id` by ASC, it's doing so as a string rather than a numeric value
 -- I'm running into some issues here because this isn't actually in the correct order
 -- Question to figure out is what is the pattern that postgres uses when ordering a column that has numeric characters? 
-
-
-
