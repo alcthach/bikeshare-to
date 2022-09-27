@@ -7,7 +7,7 @@ alcthach@gmail.com
 SELECT COUNT(*)
 FROM temp_table tt;
 
--- Exploding `trip_start_time` column, create as a view
+-- Exploding `trip_start_time` column, create as a table
 -- TODO might want to save as a view to cut on costs of ordering by `trip_id`
 CREATE TABLE start_time_exploded AS
 SELECT trip_id,
@@ -182,6 +182,24 @@ LIMIT 5;
 SELECT trip_start_time_year
 FROM trips_2017_2018_transformed tt 
 GROUP BY trip_start_time_year;
+
+SELECT * 
+FROM trips_2017_2018_transformed tt;
+
+-- Replaces trip_start_time_year format from yy to yyyy, FYI: not in place
+SELECT regexp_replace(trip_start_time_year, '^17$', '2017') 
+FROM trips_2017_2018_transformed tt;
+
+-- '' in place
+UPDATE trips_2017_2018_transformed 
+	SET trip_start_time_year = regexp_replace(trip_start_time_year, '^17$', '2017');
+
+-- Another sanity check
+SELECT trip_start_time_year
+FROM trips_2017_2018_transformed tt 
+GROUP BY trip_start_time_year;
+
+-- Looks good :thumbsup:
 
 SELECT * 
 FROM trips_2017_2018_transformed tt;
