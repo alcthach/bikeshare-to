@@ -203,3 +203,22 @@ GROUP BY trip_start_time_year;
 
 SELECT * 
 FROM trips_2017_2018_transformed tt;
+
+-- Reduce to DD/MM/YYYY hh24:mi
+ALTER TABLE trips_2017_2018_transformed 
+	ADD COLUMN clean_trip_start_time TEXT;
+	
+SELECT trip_id, concat(start_time_day, '/', start_time_month, '/', trip_start_time_year, ' ', start_time_mmss) 
+FROM trips_2017_2018_transformed tt
+ORDER BY trip_id;
+
+-- I'll also have to transform the trip_end_time as well
+
+-- Another sanity check Re: I think I'm losing rows 
+SELECT COUNT(*)
+FROM temp_table tt;
+
+SELECT COUNT(*)
+FROM trips_2017_2018_transformed tt;
+
+-- Nope
