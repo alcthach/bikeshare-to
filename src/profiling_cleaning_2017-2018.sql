@@ -268,3 +268,18 @@ WHERE start_time_month LIKE '13'
 ORDER BY trip_id
 COLLATE "numeric";
 
+-- Doing some thinking out loud here...
+-- It seems like my logic would hold that substring2 values that are greater or equal to 6 would be considered month DATA
+-- This was under the assumption that the date format flipped beginning from July 20217
+-- The issue with my CASE WHEN statement was that yes I filtered for 2017 which was important, and I grabbed substring2 and wrote to MONTH 
+-- I might be best served trying to understand when the data uses '0' as a prefix in the substring COLUMN 
+
+-- SANITY CHECK, KEEP THIS ONE!!!
+-- I'm going to have to take a closer look at this tomorrow
+SELECT trip_id, raw_start_time, start_time_substring2, start_time_substring1
+FROM
+	(SELECT DISTINCT ON (start_time_substring2, start_time_substring1) start_time_substring1, start_time_substring2, trip_id, raw_start_time
+	FROM clean_2017_2018) AS t0
+ORDER BY trip_id
+COLLATE "numeric";
+
