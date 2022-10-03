@@ -283,3 +283,91 @@ FROM
 ORDER BY trip_id
 COLLATE "numeric";
 
+
+-- NOTE: `clean_2017-2018` is the table that I want to work from; Re: `start_time_year` and `stop_time_year` are clean 
+-- But month and day columns are still outstanding
+-- I'll get a chance to understand the pattern in month and day data much better with this TABLE 
+SELECT * 
+FROM clean_2017_2018;
+
+
+-- Group by split_part(raw_start_time) getting rid of the hh:mi slice
+-- A bit messy here but just needed to understand what's going on with the assume prefix '0' in front of the month VALUES
+-- I.E. Is there a particular pattern or can I employ some sort of logic to clean this data to match the format I need; yyyy/mm/dd
+SELECT trip_id, start_date 
+FROM
+(SELECT DISTINCT ON (start_date) start_date, trip_id
+FROM
+	(SELECT trip_id, split_part(trip_start_time, ' ', 1) AS start_date
+	FROM temp_table tt) AS t0) AS t1
+ORDER BY trip_id
+COLLATE "numeric";
+
+-- I'll need to take notes on what I'm seeing as I profile the data here...
+-- Alright so in this query I've transformed the original `trip_start_time` string to contain only the date portion
+-- I'm not too concerned with the formatting here, moreso with what's going on with the prefix '0' situation
+-- Starting from January 2017, it seems like `start_date` follows the format of dd/mm/yyyy
+-- However, on the 13th day in January, the month value becomes '01' instead of '1'
+-- Not quite sure why it changes like this, there doesn't seem to be a pattern within the month itself
+-- It seems to follow this pattern up until the end of January 
+-- It follows this pattern all the way up to the June, I.E. switches to using '0' on day 13 in the month
+-- However, in July 2017, the date format switches to mm/dd/yyyy
+-- In July, Aug, and Sep 2017, neither the day nor the month contain a '0' prefix
+-- However, in Oct, the day value contains '0' prefix from the first day, this continues to Nov and Dec
+-- In 2018, there is no use of '0' prefix in either day or month VALUES 
+
+-- What implications does this have in terms of how I clean the month and day values
+-- I.E: What logic do I apply to ensure I have the correct values in both the day and months COLUMNS 
+-- What happens with how I manage the stop_time data? Same pattern? Worry about that later!
+
+-- Some ideas surrounding logic; pseudocode
+
+/*
+Some assumptions:
+Up until June 2017, substring1 likely represents the day, and substring2 represents the month that the bike trip started in
+
+PSEUDOCODE:
+if year is 2017 and cast(substring1) < 14 then set start_month to substring2
+elid year is 2017 and cast(substring1) > 13 then set start_month to 
+
+actually this might not be needed...
+
+the prefix pattern on the 13th day is consistent until the 7th month, the date format consistent switches up to that point, which means
+I could employ logic like:
+
+
+if year is 2017 and substring1::int <7 then set start_month to substring2 
+	this assumes that substring1 values are bound between when year is 2017
+	are there any situations where this is not the case? no b/c in July 2017 the date from changes to mm/dd/yyyy
+	not possible unless the trip_id is not index incremently for some reason
+
+alright so it seems like that logic works well
+
+*/
+
+-- WIP
+SELECT trip_id, start_date, start_month, start_time_substring1, start_time_substring2
+FROM
+(
+SELECT DISTINCT ON (start_date) start_date, start_time_substring1, start_time_substring2, trip_id, start_month -- better TO use slice OF date string
+FROM
+(
+SELECT trip_id, regexp_matches(raw_start_time, '.+/.+/.+/') AS start_date, start_time_substring1, start_time_substring2,
+	CASE 
+		WHEN start_time_year LIKE '2017' AND start_time_substring1::int < 7 THEN start_time_substring1
+		--WHEN start_time_year LIKE '2017' AND start_time_substring1::int >= 7 THEN start_time_substring2
+		WHEN start_time_year LIKE '2018' THEN start_time_substring1
+	END AS start_month
+	FROM clean_2017_2018
+) AS t1
+) AS t2
+ORDER BY trip_id 
+COLLATE "numeric";
+
+-- testing regex for clean_2017_2018
+SELECT *
+FROM clean_2017_2018 c 
+WHERE raw_start_time ~'.+/.+/.+/.+';
+
+SELECT regexp_matches(raw_start_time, '.+/.+/.+/') AS start_date
+FROM clean_2017_2018 c;
