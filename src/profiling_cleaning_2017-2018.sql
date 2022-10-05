@@ -354,7 +354,7 @@ FROM
 (
 SELECT trip_id, regexp_matches(raw_start_time, '.+/.+/.+/') AS start_date, start_time_substring1, start_time_substring2,
 	CASE 
-		WHEN start_time_year LIKE '2017' AND start_time_substring1::int < 7 THEN start_time_substring1
+		WHEN start_time_year LIKE '2017' AND start_time_substring2::int < 7 THEN start_time_substring2 -- substring2 changes AT july 2017 something TO watch OUT for
 		--WHEN start_time_year LIKE '2017' AND start_time_substring1::int >= 7 THEN start_time_substring2
 		WHEN start_time_year LIKE '2018' THEN start_time_substring1
 	END AS start_month
