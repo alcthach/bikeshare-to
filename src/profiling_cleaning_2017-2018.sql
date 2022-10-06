@@ -456,4 +456,57 @@ WHERE trip_id::int > 1253140 AND trip_id::int < 1253915;
 -- else month = start_time_substring2 and day = start_time_substring1
 -- TODO: Take a look at the load to destination table script to see how it functions, work backwards from there to figure out how to model `raw_2017_2018` table
 
+SELECT
+	trip_id,
+	trip_start_time,
+	CASE 
+		WHEN trip_id::int < 1253915 THEN start_time_substring1
+		WHEN trip_id::int >= 1253915 THEN start_time_substring2
+	END AS start_time_day,
+	CASE 
+		WHEN trip_id::int < 1253915 THEN start_time_substring2
+		WHEN trip_id::int >= 1253915 THEN start_time_substring1
+	END AS start_time_month
+FROM raw_2017_2018
+ORDER BY trip_id
+COLLATE "numeric";
+
+-- casting as timestamp based on trip_id
+-- LOOKING NICE
+SELECT
+	trip_id,
+	trip_start_time,
+	CASE 
+		WHEN trip_id::int < 1253915 THEN to_timestamp(trip_start_time, 'dd/mm/yyyy hh24:mi:ss')  -- dd/mm/yyyy
+		WHEN trip_id::int >= 1253915 THEN to_timestamp(trip_start_time, 'mm/dd/yyyy hh24:mi:ss') -- mm/dd/yyyy
+	END AS start_ts,
+	CASE -- TODO: THERE'S A NULL THAT NEEDS TO BE REMOVED!
+		WHEN trip_id::int < 1253915 THEN to_timestamp(trip_stop_time, 'dd/mm/yyyy hh24:mi:ss')  -- dd/mm/yyyy
+		WHEN trip_id::int >= 1253915 THEN to_timestamp(trip_stop_time, 'mm/dd/yyyy hh24:mi:ss') -- mm/dd/yyyy
+	END AS stop_ts
+FROM raw_2017_2018
+ORDER BY trip_id
+COLLATE "numeric";
+
+-- Checking out the stop times to make sure nothing strange is happening...
+-- I mean, I don't the trips have indexed properly
+-- A bit concerned here...
+SELECT	trip_id,
+		trip_start_time, -- This would EXPLAIN why...
+		trip_stop_time,
+		stop_time_substring1,
+		stop_time_substring2		
+FROM
+	(
+	SELECT	
+		DISTINCT ON (split_part(trip_stop_time, ' ', 1))
+		trip_stop_time,
+		trip_start_time,
+		trip_id,
+		stop_time_substring1,
+		stop_time_substring2
+	FROM raw_2017_2018 r
+	) AS t0
+ORDER BY trip_id
+COLLATE "numeric"; 
 
