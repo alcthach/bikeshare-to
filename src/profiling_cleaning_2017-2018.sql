@@ -18,11 +18,13 @@ UPDATE temp_table
 CREATE TABLE IF NOT EXISTS raw_2017_2018 AS
 	SELECT
 		trip_id,
+		trip_start_time,
 		raw_start_time,
 		split_part(raw_start_time, '/', 1) AS start_time_substring1,
 		split_part(raw_start_time, '/', 2) AS start_time_substring2,
 		split_part(raw_start_time, '/', 3) AS start_time_year,
 		split_part(raw_start_time, '/', 4) AS start_time_mmss,
+		trip_stop_time,
 		raw_stop_time,
 		split_part(raw_stop_time, '/', 1) AS stop_time_substring1,
 		split_part(raw_stop_time, '/', 2) AS stop_time_substring2,
@@ -276,7 +278,7 @@ COLLATE "numeric";
 
 -- SANITY CHECK, KEEP THIS ONE!!!
 -- I'm going to have to take a closer look at this tomorrow
-SELECT trip_id, raw_start_time, start_time_substring2, start_time_substring1
+SELECT trip_id, raw_start_time, start_time_substring1, start_time_substring2
 FROM
 	(SELECT DISTINCT ON (start_time_substring2, start_time_substring1) start_time_substring1, start_time_substring2, trip_id, raw_start_time
 	FROM clean_2017_2018) AS t0
@@ -371,3 +373,87 @@ WHERE raw_start_time ~'.+/.+/.+/.+';
 
 SELECT regexp_matches(raw_start_time, '.+/.+/.+/') AS start_date
 FROM clean_2017_2018 c;
+
+---
+
+-- Continuing from 2022-10-06
+-- Just re-jogging my memory
+-- From what I remember I was running into some issues with the logic, I need to think about whether I want to use the exploded columns or the raw start dates, or something ELSE 
+
+-- Let's just slice it manually for all intents and purposees
+
+SELECT *
+FROM clean_2017_2018 c 
+WHERE start_time_substring2 LIKE '1' AND start_time_substring1 LIKE '7'
+ORDER BY trip_id 
+COLLATE "numeric";
+
+-- USE trip_id LIKE '719626' as the boundary between the data format changes
+
+SELECT trip_id, raw_start_time, start_time_substring1
+​	FROM
+	(SELECT DISTINCT ON (start_time_substring1) start_time_substring1, trip_id, raw_start_time
+	FROM clean_2017_2018
+	WHERE trip_id::int < 719626) AS t0;
+
+
+-- LOGIC ERROR IDENTIFIED start_time_substring1 and start_time_substring2; seems like I might have mixed them up here based on the query below
+SELECT *
+FROM clean_2017_2018 c 
+WHERE trip_id::int < 719626;
+
+-- Yep, I think this is better; dd/mm/yyyy
+SELECT DISTINCT ON (start_time_substring1) start_time_substring1, start_time_substring2, trip_id, raw_start_time 
+FROM clean_2017_2018 c 
+WHERE trip_id::int < 719626;
+
+-- I'm going to go ahead build the date string back up again, but before that I'll have to fix the way `clean_2017_2018` is modelled. Re: Switch the substring columns
+SELECT DISTINCT start_time_substring2
+FROM clean_2017_2018 c
+WHERE trip_id::int > 719626;
+
+-- Initialized raw_2017_2018 from up above
+
+-- Assumes dd/mm/yyyy format 
+-- Something is really weird here, if substring1 represents day then the range should be much larger, not 1-6
+SELECT *
+FROM raw_2017_2018
+WHERE trip_id::int < 719626
+ORDER BY trip_id
+COLLATE "numeric";
+
+
+--- This query let's me select distinct on the the raw timestamp to see whats going on 
+SELECT	trip_id, 
+		trip_start_time,
+		start_time_substring1,
+		start_time_substring2
+FROM
+	(
+	SELECT DISTINCT ON	(split_part(trip_start_time, ' ', 1)) trip_start_time, 
+						trip_id, 
+						start_time_substring1, 
+						start_time_substring2
+	FROM raw_2017_2018
+	-- WHERE trip_id::int < 719626 -- Added FILTER here, NOT quite sure what's going ON here still...
+	WHERE trip_id::int >= 1253914 -- correct filter
+	) AS t0
+ORDER BY trip_id
+COLLATE "numeric";
+
+-- Actually! I think my filter logic might be a bit faulty actually... Yep my logic was broken...
+-- The trip_id I should be indexing at is 12365571 or something around that neighbourhood
+-- I'm a bit worried because it looking like I'm missing some data in July 2017 but that's okay
+-- Source of truth is trip_id, so long as it assumes each subsequent trip is indexed incrementally 
+
+-- This is where the data format shifts; I.E. trip_id:: >= 1_253_914
+SELECT *
+FROM raw_2017_2018
+WHERE trip_id::int > 1253140 AND trip_id::int < 1253915;
+
+-- My logic is as follows
+-- if trip_id:: >= 1_253_914 then month = start_time_substring1 and  day = start_time_substring2
+-- else month = start_time_substring2 and day = start_time_substring1
+-- TODO: Take a look at the load to destination table script to see how it functions, work backwards from there to figure out how to model `raw_2017_2018` table
+
+
