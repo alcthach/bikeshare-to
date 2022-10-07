@@ -471,8 +471,12 @@ FROM raw_2017_2018
 ORDER BY trip_id
 COLLATE "numeric";
 
+
+
+
+
 -- casting as timestamp based on trip_id
--- LOOKING NICE
+-- LOOKING NICE, except for the stop time data
 SELECT
 	trip_id,
 	trip_start_time,
@@ -481,12 +485,41 @@ SELECT
 		WHEN trip_id::int >= 1253915 THEN to_timestamp(trip_start_time, 'mm/dd/yyyy hh24:mi:ss') -- mm/dd/yyyy
 	END AS start_ts,
 	CASE -- TODO: THERE'S A NULL THAT NEEDS TO BE REMOVED!
-		WHEN trip_id::int < 1253915 THEN to_timestamp(trip_stop_time, 'dd/mm/yyyy hh24:mi:ss')  -- dd/mm/yyyy
+		WHEN trip_id::int < 1253915 THEN  to_timestamp(trip_stop_time, 'dd/mm/yyyy hh24:mi:ss')  -- dd/mm/yyyy
 		WHEN trip_id::int >= 1253915 THEN to_timestamp(trip_stop_time, 'mm/dd/yyyy hh24:mi:ss') -- mm/dd/yyyy
 	END AS stop_ts
 FROM raw_2017_2018
 ORDER BY trip_id
 COLLATE "numeric";
+
+-- The error that I'm being thrown here seems to suggest that the computer is not getting minute values for a row or ROWS 
+-- I might be best served trying to parse for minutes data `trip_stop_time` that is LIKE 'NU'
+
+SELECT * 
+FROM temp_table 
+WHERE trip_stop_time LIKE '%NU%'; -- '%' CHARACTER used AS a wildcard
+
+-- Seems like the query above just returns one element in the dataset; which is good
+-- I don't think this row is going to be usable for the dataset 
+-- Appears that the trip started somewhere, but there is no end point for the trip, hence no stop time/duration
+-- I don't want to speculate but either there was a glitch, or the bike was never returned by this customer
+
+-- KEY DECISION: Dropping this ROW in order to move forward with the date cleaning
+-- NOTE: I'll be doing this on the processed table, not the raw table pulled using pgfutter
+
+SELECT *
+FROM raw_2017_2018 r 
+WHERE trip_stop_time LIKE '%NULL%';
+
+-- Deleteing the null value
+DELETE FROM raw_2017_2018 
+WHERE trip_stop_time LIKE '%NULL%';
+
+
+
+
+
+
 
 -- Checking out the stop times to make sure nothing strange is happening...
 -- I mean, I don't the trips have indexed properly
