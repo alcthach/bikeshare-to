@@ -226,3 +226,37 @@ SELECT * FROM clean_partial_oct_2020;
 SELECT *
 FROM clean_2019_2022
 WHERE NOT (clean_2019_2022 IS NOT null);
+
+-- Clean missing 'trip__duration' values, create as table to replace missing values
+
+CREATE TABLE clean_missing_trip_duration_2019 AS
+	SELECT 
+		trip_id,
+		split_part( (end_time_mmss - start_time_mmss)::TEXT , ':', 2) AS trip__duration,
+		start_station_id,
+		start_time,
+		start_station_name,
+		end_station_id,
+		end_time,
+		end_station_name,
+		bike_id,
+		user_type
+	FROM
+		(
+		SELECT
+			*,
+			split_part(start_time, ' ', 2)::time AS start_time_mmss,
+			split_part(end_time, ' ', 2)::time AS end_time_mmss
+		FROM clean_2019_2022 c 
+		WHERE trip__duration LIKE ''
+		) AS t0;
+	
+-- Delete rows with missing 'trip__duration' values
+DELETE FROM clean_2019_2022 
+WHERE trip__duration LIKE '';
+
+-- Replace deleted rows from above query
+INSERT INTO clean_2019_2022 
+SELECT *
+FROM clean_missing_trip_duration_2019;
+
