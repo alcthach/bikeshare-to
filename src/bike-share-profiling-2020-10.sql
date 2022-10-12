@@ -107,3 +107,122 @@ FROM
 	SELECT * FROM temp_table_2020_10 tt 
 	WHERE length(trip_id) > 8
 ) AS t0;
+
+SELECT trip_id, substring(trip_id FROM 8) AS trip_id_suffix
+FROM temp_table_2020_10 tt 
+WHERE length(trip_id) > 8;
+
+-- I think I'm working off the assumption that string lengths at maximum should be 8 characters long
+-- However, the issue might be if 7-character long trip_id only occurs earlier in time
+-- Because what I'm doing right now is arbitrarily slicing 'trip_id' strings
+-- I'll need to see what the behaviour of 7 and 8 character length 'trip_id' values are like 
+
+
+-- Seems like the switch from 7 to 8 characters would make sense as the volume of trips complete increases over time
+SELECT DISTINCT ON (split_part(start_time, ' ', 1)) trip_id, length(trip_id), split_part(start_time, ' ', 1) AS start_date
+FROM temp_table_2020_10 tt 
+WHERE length(trip_id) < 9;
+
+-- Check trips from pre-2020; note that the 'trip_id' length is smaller and the values are also smaller as well
+SELECT *
+FROM temp_table tt;
+
+-- Not the most efficient query to run but it look like 'trip_id' values are 8 characters long starting in October 2020
+-- Keeping this in mind the decision to split the string from index 9 would make the most sense
+SELECT *
+FROM
+(SELECT DISTINCT ON (split_part(start_time, ' ', 1)) trip_id, length(trip_id), split_part(start_time, ' ', 1) AS start_date
+FROM temp_table_2019_2022 tt) AS t0
+ORDER BY trip_id
+COLLATE "numeric";
+
+-- Explode 'trip_id_raw' into 'trip_id' and 'trip_duration'
+-- If I find the time different between the trip start and end times I should have the same values 'trip_duration' COLUMN 
+SELECT trip_id AS trip_id_raw, 
+	LEFT(trip_id, 8) AS trip_id_clean, 
+	substring(trip_id FROM 9) AS trip_duration
+FROM temp_table_2020_10 tt;
+
+
+-- Check split 'trip_id_suffix' against calculated trip duration
+-- NOTE: This checks out; safe to clean the 'trip_id' columns with the logic mentioned above
+SELECT trip_id_clean,
+		start_time,
+		end_time,
+		start_time - end_time trip_duration_minutes ,
+		trip_id_suffix_to_minutes
+FROM
+	(
+	SELECT trip_id AS trip_id_raw,
+		split_part(start_station_id, ' ', 2)::time start_time,
+		split_part(end_station_id, ' ', 2)::time end_time,
+		LEFT(trip_id, 8) AS trip_id_clean, 
+		substring(trip_id FROM 9)::int/60 AS trip_id_suffix_to_minutes
+	FROM temp_table_2020_10 tt
+	WHERE length(trip_id) > 8
+	) AS t0
+ORDER BY trip_id_clean
+COLLATE "numeric";
+
+-- TYPO in 'trip_duration' header, Re: Two underscores instead of one
+SELECT *
+FROM temp_table_2019_2022 tt
+LIMIT 5;
+
+SELECT *
+FROM october_2020_raw;
+
+-- Clean 249 rows with 'user_type' is NULL
+-- NOTE: These rows will not be able to join to the raw october data Re: No key to join on
+-- Instead it might be better to drop the NULL ROWS 
+
+CREATE TABLE IF NOT EXISTS clean_partial_oct_2020 AS
+SELECT 
+		LEFT(trip_id, 8) AS trip_id, 
+		substring(trip_id FROM 9) AS trip__duration,
+		trip__duration AS start_station_id,
+		start_station_id AS start_time,
+		start_time AS start_station_name,
+		start_station_name AS end_station_id,
+		end_station_id AS end_time,
+		end_time AS end_station_name, 
+		end_station_name AS bike_id,
+		bike_id AS user_type
+		FROM october_2020_raw
+WHERE user_type IS NULL;
+
+-- Drop null values from temp_table_2020_10 tt 
+
+DELETE FROM october_2020_raw
+WHERE user_type IS NULL;
+
+-- Insert clean rows from clean_partial_oct_2020
+-- 249 rows, perfect
+INSERT INTO october_2020_raw 
+SELECT * FROM clean_partial_oct_2020;
+
+-- Actually I could insert directly into temp_table_2019_2022 ...
+
+-- Let's do that instead
+
+CREATE TABLE IF NOT EXISTS
+raw_2019_2022
+AS TABLE temp_table_2019_2022;
+
+SELECT count(*)
+FROM raw_2019_2022
+WHERE user_type IS NULL;
+
+CREATE TABLE IF NOT EXISTS clean_2019_2022
+AS TABLE raw_2019_2022;
+
+DELETE FROM clean_2019_2022
+WHERE user_type IS NULL;
+
+INSERT INTO clean_2019_2022
+SELECT * FROM clean_partial_oct_2020;
+
+-- Looks good!
+SELECT *
+FROM clean_2019_2022
+WHERE NOT (clean_2019_2022 IS NOT null);
