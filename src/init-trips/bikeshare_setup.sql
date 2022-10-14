@@ -11,10 +11,10 @@ CREATE TABLE IF NOT EXISTS trips (
 	trip_id			varchar,			
 	trip_duration		int,
 	start_station_id	varchar,
-	start_time		timestamp,
+	trip_started_at		timestamp,
 	start_station_name	varchar,
 	end_station_id		varchar,
-	end_time		timestamp,
+	trip_ended_at		timestamp,
 	end_station_name	varchar,
 	bike_id			varchar,
 	user_type		varchar

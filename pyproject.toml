@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "bikeshare"
+version = "0.1.0"
+description = ""
+authors = ["athach <alcthach@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+ipykernel = "^6.15.3"
+jupyter = "^1.0.0"
+numpy = "^1.23.3"
+pandas = "^1.5.0"
+matplotlib = "^3.6.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

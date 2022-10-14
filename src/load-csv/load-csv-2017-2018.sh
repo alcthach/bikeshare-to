@@ -5,7 +5,7 @@
 
 # FILE=~/work/projects/bikeshare/data/raw/bikeshare_ridership_2017_Q1.csv
 DBNAME=bikeshare
-TABLENAME=temp_table
+TABLENAME=raw_2017-2018
 SCHEMA=public
 
 cd ~

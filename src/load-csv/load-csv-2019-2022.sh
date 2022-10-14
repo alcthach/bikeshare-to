@@ -6,7 +6,7 @@
 
 # FILE=~/work/projects/bikeshare/data/raw/bikeshare_ridership_2017_Q1.csv
 DBNAME=bikeshare
-TABLENAME=temp_table_2019_2022
+TABLENAME=raw_2019_2022
 SCHEMA=public
 PATH=~/work/projects/bikeshare/data/processed/
 
@@ -23,13 +23,13 @@ cd ~
 # Load 2019 files
 for FILE in $PATH*2019*.csv;
 do 
-# ./pgfutter --db $DBNAME --schema $SCHEMA --table $TABLENAME csv "$FILE";
-echo "$FILE has been loaded successfully to $DBNAME.$TABLENAME"; 
+./pgfutter --db $DBNAME --schema $SCHEMA --table $TABLENAME csv "$FILE";
+# echo "$FILE has been loaded successfully to $DBNAME.$TABLENAME"; 
 done
 
 # Load 2020-2022 files
 for FILE in $PATH*202[0-2]*.csv;
 do 
-# ./pgfutter --db $DBNAME --schema $SCHEMA --table $TABLENAME csv "$FILE";
-echo "$FILE has been loaded successfully to $DBNAME.$TABLENAME"; 
+./pgfutter --db $DBNAME --schema $SCHEMA --table $TABLENAME csv "$FILE";
+# echo "$FILE has been loaded successfully to $DBNAME.$TABLENAME"; 
 done

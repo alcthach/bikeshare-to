@@ -6,17 +6,47 @@ SET
 	trip_duration_seconds = CAST(trip_duration_seconds AS int)
 ;
 
-@target_table = temp_table
-@target_column = trip_start_time
+CREATE PROCEDURE convert_columns(target_table text, target_column text, target_column_holder text)
+	LANGUAGE plpgsql
+	AS $$
+	BEGIN
+		EXECUTE IMMEDIATE
+			'ALTER temp_table ADD COLUMN (target_column_holder) timestamp WITHOUT time ZONE NULL; 
+			UPDATE temp_table SET (target_column_holder) = (target_column)::timestamp;
+			ALTER TABLE temp_table ALTER COLUMN (target_column) TYPE TIMESTAMP WITHOUT time ZONE USING (target_column_holder);
+			ALTER TABLE temp_table DROP COLUMN (target_column_holder);
+			COMMIT;'
+		END;
+		$$;
+	
+	
+	
+DROP PROCEDURE transform_columns(character varying,character varying,character varying);
+	
+CREATE OR REPLACE PROCEDURE transform_columns
+(
+_target_table varchar,
+_target_column varchar,
+_target_column_holder varchar
+)
+AS $$
+BEGIN 
+	EXECUTE FORMAT('ALTER target_table ADD COLUMN target_column_holder timestamp WITHOUT time ZONE NULL')
+		USING _target_table, _target_column_holder;
+	-- EXECUTE FORMAT('UPDATE _target_table SET _target_column_holder = _target_column::timestamp')
+		-- USING _target_table, _target_column_holder, _target_column;
+	-- EXECUTE FORMAT('ALTER TABLE _target_table ALTER COLUMN _target_column TYPE TIMESTAMP WITHOUT time ZONE USING _ target_column_holder')
+		-- USING _target_table, _target_column, _target_column_holder;
+	-- EXECUTE FORMAT('ALTER TABLE _target_table DROP COLUMN _target_column_holder')
+		-- USING _target_table, _target_column_holder;
+	COMMIT;
+END;
+$$ LANGUAGE plpgsql;
 
-CREATE PROCEDURE convert_columns
-	AS
-		ALTER @target_table ADD COLUMN column_name_holder timestamp WITHOUT time ZONE NULL; 
-		UPDATE @target_table SET column_name_holder = @target_column::timestamp;
-		ALTER TABLE @target_table ALTER COLUMN @target_column TYPE TIMESTAMP WITHOUT time ZONE USING column_name_holder;
-		ALTER TABLE @target_table DROP COLUMN trip_start_time_holder;
 		
-
+CALL transform_columns('temp_table', 
+					   'trip_start_time', 
+					   'tripstart_time_holder');
 
 
 -- Add temporary column for trip start time and setting type to timestamp without time zone
