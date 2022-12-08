@@ -16,3 +16,8 @@ Did a little bit of the sqlalchemy tutorial, learned that it's an ORM, so it's u
 I'm going to see if I could figure out this business with SELECT INTO statement first
 
 Going to implement and see how it does
+
+EDIT from [[2022-12-01]]
+
+Likely no need to implement a python solution see [[bike-share-dev-log-2022-12-01]] Re: bash and psql implementation
+

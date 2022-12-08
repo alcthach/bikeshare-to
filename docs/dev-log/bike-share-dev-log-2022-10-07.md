@@ -7,7 +7,9 @@
 
 The focus for today is seeing if I could complete the modeling for 2017-18 data. Seems doable!
 
-Ii was thrown an error because there was a trip that didn't have a stop time. I tried to cast the column as `timestamp` here, however, because there was a null value in this column the computer couldn't proceed. 
+Ii was thrown an error because there was a trip that didn't have a stop time. I tried to cast the column as `timestamp` he￼￼text￼
+
+re, however, because there was a null value in this column the computer couldn't proceed. 
 
 ``` sql
 SELECT * 

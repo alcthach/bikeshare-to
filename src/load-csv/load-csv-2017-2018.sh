@@ -9,11 +9,12 @@ TABLENAME=raw_2017-2018
 SCHEMA=public
 
 cd ~
-for FILE in ~/work/projects/bikeshare/data/raw/*201[7,8]*.csv;
+for FILE in ~/work/projects/bikeshare-to/data/raw/*201[7,8]*.csv;
 do
-./pgfutter --db $DBNAME --schema $SCHEMA --table $TABLENAME csv "$FILE";
+echo "$FILE"
+head -1 "$FILE" 
+echo " "
 done
 
-echo "$FILE has been loaded successfully to $DBNAME." 
 
 

@@ -40,7 +40,7 @@ I think at this point. I might hope over to dbbeaver to delete and re-initialize
 
 Load csv files using bash scripts, all they do is loop through regex and pgfutter to the schema
 
----
+
 
 ### TODO:
 - Impute missing station IDs in 2017-2018 data

@@ -83,4 +83,4 @@ I'm thinking that I should implement this through sqlalchemy perhaps... this is 
 
 I think bash is quite helpful in automate shell tasks, in addition, looking into files and peeking
 
-The file renaming script that I wrote was pretty nifty. However, I think I might need to leverage python for this as it seems a bit more robust. Especially with the control flows that I brainstormed above...
+The file renaming script that I wrote was pretty nifty. However, I think I might need to leverage python for this as it seems a bit more robust. Especially with the control flows that I brainstormed above...Untitled

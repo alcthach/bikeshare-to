@@ -72,3 +72,13 @@ Maybe I'm making it a bit too complicated on myself...
 I also think that the mainstay of SQL is it's ability to query and model data. In terms of the dynamic capability, that doesn't come easily.
 
 Tomorrow I'll worry about the transformation. Actually I'll do it quickly now.
+
+### EDIT: [[2022-12-01]]
+
+- I think I was spot-on with just wanted to push the project forward
+- The issue might be that automation and developing programmatic solution can prove to be a difficult task using only SQL
+- However, implementing a python-based solution is likely to make my life a bit easier
+- However, understanding that I need to load the data is the most important think
+- If the data becomes dynamic, I can try to refactor and extend the code in the future
+	- If this requires an implementation of python I can arrange for that after
+	- Something like parse csv file using python os, read the headers and map to the appropriate columns in the destination table
