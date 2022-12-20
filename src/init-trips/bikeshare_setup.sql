@@ -9,12 +9,12 @@ Created: 2022-09-11
 -- This is going to be the main table that I load all the trip table to
 CREATE TABLE IF NOT EXISTS trips (
 	trip_id			varchar,			
-	trip_duration		int,
+	trip_duration_seconds	int,
 	start_station_id	varchar,
-	trip_started_at		timestamp,
+	trip_start_time		timestamp,
 	start_station_name	varchar,
 	end_station_id		varchar,
-	trip_ended_at		timestamp,
+	trip_end_time		timestamp,
 	end_station_name	varchar,
 	bike_id			varchar,
 	user_type		varchar
