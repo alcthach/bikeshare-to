@@ -9,7 +9,7 @@ WHERE trip_start_time LIKE 'trip_start_time';
 -- Sanity check to see if row was dropped
 SELECT *
 FROM raw_2017_q1q2
-WHERE trip_start_time LIKE 'trip_start-time';
+WHERE trip_start_time LIKE 'trip_start_time';
 -- Good
 
 -- Load `raw_2017_q1q2` to `trips`
@@ -137,20 +137,6 @@ SELECT "Trip  Duration"
 FROM raw_2019_2020
 WHERE "Trip  Duration" NOT LIKE '%[^0-9]%';
 
-INSERT INTO trips
-(trip_id, trip_duration_seconds, start_station_id, trip_start_time, start_station_name, end_station_id, trip_end_time,
- end_station_name, bike_id, user_type)
-SELECT "Trip Id",
-       "Trip  Duration"::int,
-       "Start Station Id",
-       TO_TIMESTAMP("Start Time", 'mm/dd/yyyy hh24:mi'),
-       "Start Station Name",
-       "End Station Id",
-       TO_TIMESTAMP("End Time", 'mm/dd/yyyy hh24:mi'),
-       "End Station Name",
-       "Bike Id",
-       "User Type"
-FROM raw_2019_2020;
 
 SELECT "Trip  Duration"
 FROM raw_2019_2020
@@ -166,3 +152,24 @@ select count(*)
 from raw_2019_2020
 where "Trip  Duration" like '0%'
     -- That's quite a number of rows
+
+-- Delete duplicate column header rows found in data set
+delete
+from raw_2019_2020
+where "Trip  Duration" ~ 'Trip  Duration';
+
+-- Load 2019 and 2020 data to 'trips'
+INSERT INTO trips
+(trip_id, trip_duration_seconds, start_station_id, trip_start_time, start_station_name, end_station_id, trip_end_time,
+ end_station_name, bike_id, user_type)
+SELECT "Trip Id",
+       "Trip  Duration"::int,
+       "Start Station Id",
+       TO_TIMESTAMP("Start Time", 'mm/dd/yyyy hh24:mi'),
+       "Start Station Name",
+       "End Station Id",
+       TO_TIMESTAMP("End Time", 'mm/dd/yyyy hh24:mi'),
+       "End Station Name",
+       "Bike Id",
+       "User Type"
+FROM raw_2019_2020;
