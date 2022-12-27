@@ -173,3 +173,84 @@ SELECT "Trip Id",
        "Bike Id",
        "User Type"
 FROM raw_2019_2020;
+
+-- Feb-Apr 2021
+DELETE
+from raw_feb_apr_2021
+where "Trip  Duration" ~ 'Trip  Duration';
+
+INSERT INTO trips
+(trip_id, trip_duration_seconds, start_station_id, trip_start_time, start_station_name, end_station_id, trip_end_time,
+ end_station_name, bike_id, user_type)
+SELECT "Trip Id",
+       "Trip  Duration"::int,
+       "Start Station Id",
+       TO_TIMESTAMP("Start Time", 'mm/dd/yyyy hh24:mi'),
+       "Start Station Name",
+       "End Station Id",
+       TO_TIMESTAMP("End Time", 'mm/dd/yyyy hh24:mi'),
+       "End Station Name",
+       "Bike Id",
+       "User Type"
+FROM raw_feb_apr_2021;
+
+-- Jan 2021
+DELETE
+from raw_jan_2021
+where "Trip  Duration" ~ 'Trip  Duration';
+
+INSERT INTO trips
+(trip_id, trip_duration_seconds, start_station_id, trip_start_time, start_station_name, end_station_id, trip_end_time,
+ end_station_name, bike_id, user_type)
+SELECT "Trip Id",
+       "Trip  Duration"::int,
+       "Start Station Id",
+       TO_TIMESTAMP("Start Time", 'mm/dd/yyyy hh24:mi'),
+       "Start Station Name",
+       "End Station Id",
+       TO_TIMESTAMP("End Time", 'mm/dd/yyyy hh24:mi'),
+       "End Station Name",
+       "Bike Id",
+       "User Type"
+FROM raw_jan_2021;
+
+-- Jun 2021 to Present
+DELETE
+from raw_jun_2021_present
+where "Trip  Duration" ~ 'Trip  Duration';
+
+INSERT INTO trips
+(trip_id, trip_duration_seconds, start_station_id, trip_start_time, start_station_name, end_station_id, trip_end_time,
+ end_station_name, bike_id, user_type)
+SELECT "Trip Id",
+       "Trip  Duration"::int,
+       "Start Station Id",
+       TO_TIMESTAMP("Start Time", 'mm/dd/yyyy hh24:mi'),
+       "Start Station Name",
+       "End Station Id",
+       TO_TIMESTAMP("End Time", 'mm/dd/yyyy hh24:mi'),
+       "End Station Name",
+       "Bike Id",
+       "User Type"
+FROM raw_jun_2021_present;
+
+-- May 2021
+DELETE
+from raw_may_2021
+where "Trip  Duration" ~ 'Trip  Duration';
+
+INSERT INTO trips
+(trip_id, trip_duration_seconds, start_station_id, trip_start_time, start_station_name, end_station_id, trip_end_time,
+ end_station_name, bike_id, user_type)
+SELECT "Trip Id",
+       "Trip  Duration"::int,
+       "Start Station Id",
+       TO_TIMESTAMP("Start Time", 'mm/dd/yyyy hh24:mi'),
+       "Start Station Name",
+       "End Station Id",
+       TO_TIMESTAMP("End Time", 'mm/dd/yyyy hh24:mi'),
+       "End Station Name",
+       "Bike Id",
+       "User Type"
+FROM raw_may_2021;
+
