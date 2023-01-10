@@ -329,7 +329,7 @@ from
     ) as t0
 group by year;
 
-
+-- Missing end station name
 select split_part(trip_start_time::text, '-', 1) as year,
        count(*)
 from
@@ -340,6 +340,249 @@ from
     ) as t0
 group by year;
 
+select *
+from trips
+limit 1;
+
+-- PROFILING: 'bike_id'
+select distinct count(*), bike_id
+from trips
+group by bike_id;
+    -- This is kind of helpful b/c it shows which bikes have been used the most
+
+-- Check for total number of distinct bike IDs
+
+select count(*) as total_distinct_bike_id
+from
+(
+select distinct bike_id
+from trips
+    ) as t0;
+    -- This tells me that there are 7123 distinct bike IDs in the fleet
+
+-- Check for null or missing values in 'bike_id'
+select *
+from trips
+where bike_id is NULL;
+
+-- Check which years I am missing bike_id values from
+select split_part(trip_start_time::text, '-', 1) as year
+from
+(select *
+ from trips
+ where bike_id is NULL
+) as t0
+group by year;
+
+-- Checking for non-numeric values in the field
+select *
+from trips
+where bike_id !~ '.[0-9].';
+    -- This query needs to be edited
+
+-- Check for the different string lengths in 'bike_id' field
+select length(bike_id) as bike_id_string_length, count(*)
+    from
+(
+select distinct bike_id
+from trips
+) as t0
+group by bike_id_string_length;
+
+-- Break down 'bike_id' string length by timestamp
+
+-- Some pseudocode
+-- Maybe a window function or partitions might be helpful in this instance
+-- I.E. find string length partition by year
+-- Will have to refresh myself on window functions, and if this is a use-case
+
+-- Filter trips by 'bike_id' string length and year
+with bike_id_str_len_year AS
+         (select length(bike_id) as bike_id_string_length,
+                 year
+          from (select distinct bike_id,
+                                split_part(trip_start_time::text, '-', 1) as year
+                from trips) as t0)
+select bike_id_string_length,
+       count(bike_id_string_length) over (partition by year),
+       year
+from bike_id_str_len_year;
+    -- This doesn't seem right...
+    -- My output would look like this...
+    -- |str length|str length count|year|
+    -- |2|120|2019|
+    -- |3|451|2020|
+    -- The above query is close...
+    -- I added `bike_id_string_length`
+    -- There's something else missing...
+    -- I shouldn't be seeing as many rows as I'm seeing right now
+
+-- Filter trips by 'bike_id' string length and year, edit
+with bike_id_str_len_year AS
+         (select length(bike_id) as bike_id_string_length,
+                 year
+          from (select distinct bike_id,
+                                split_part(trip_start_time::text, '-', 1) as year
+                from trips) as t0)
+select bike_id_string_length,
+       count(bike_id_string_length) over (partition by year),
+       year
+from bike_id_str_len_year;
+    -- The counting is a bit strange
+    -- I need to count within each year, and within each sub-category of bike_id str length
+    -- Also trying to remember why I got sent down this rabbit hole in the first place
+    -- Trying to see if there's a pattern between bike_id string length and timestamp
+
+with bike_id_str_len_year AS
+         (select bike_id,
+                 length(bike_id) as bike_id_string_length,
+                 year
+          from (select distinct bike_id,
+                                split_part(trip_start_time::text, '-', 1) as year
+                from trips) as t0)
+select bike_id,
+       bike_id_string_length,
+       count(bike_id_string_length) over w2,
+       year
+from bike_id_str_len_year
+window w1 as (partition by year), w2 as (partition by bike_id_string_length);
 
 
 
+with bike_id_str_len_year AS
+         (select bike_id,
+                 length(bike_id) as bike_id_string_length,
+                 year
+          from (select distinct bike_id,
+                                split_part(trip_start_time::text, '-', 1) as year
+                from trips) as t0)
+select
+       bike_id_string_length,
+        count(bike_id_string_length),
+       year
+from bike_id_str_len_year
+group by year, bike_id_string_length
+order by year, bike_id_string_length;
+    -- Something is wrong with the math based on the total number of unique bike IDs seen below Re: 7123
+
+select count(*)
+from
+    (
+        select distinct bike_id
+        from trips
+    ) as t0;
+
+select bike_id,
+                 length(bike_id) as bike_id_string_length,
+                 year
+          from (select distinct bike_id,
+                                split_part(trip_start_time::text, '-', 1) as year
+                from trips) as t0;
+    -- This is the based table that I'd be running my next query on
+    -- I don't think I want too spend too much time on this
+    -- However, I can count by bike_id string length or year, neither are what I'm looking for
+    -- I want the count of string lengths partitioned by year
+    -- FOR EACH YEAR COUNT THE TOTAL IDS FOR EACH STRING LENGTH
+
+with summary_bike_id_str_len AS (
+with bike_id_str_len_year AS
+         (select bike_id,
+                 length(bike_id) as bike_id_string_length,
+                 year
+          from (select distinct bike_id,
+                                split_part(trip_start_time::text, '-', 1) as year
+                from trips) as t0)
+select
+    bike_id_string_length,
+    count(bike_id_string_length) over w,
+    year
+    from bike_id_str_len_year
+window w as (partition by year, bike_id_string_length))
+select distinct *
+from summary_bike_id_str_len
+order by year, bike_id_string_length;
+    -- Why doesn't the math check out?
+    -- Same bike IDs can be found in subsequent years
+    -- This was a massive logic error on my part
+
+select count(*)
+from
+    (
+select distinct bike_id
+from trips) as t0;
+
+-- On my next pomodoros I'll need to ensure that trip_id values are indexed properly
+-- Just need to ensure the str length of 'trip_id increases as function of time... TODO
+
+-- Check for different lengths of 'trip_id' string
+-- Break down by year
+select distinct split_part(trip_start_time::text, '-', 1),
+                length(trip_id)
+from trips;
+
+-- My final look will be with membership type or 'user_type'
+
+-- Check values that 'user_type' field takes on
+select user_type,
+       split_part(trip_start_time::text, '-', 1) as year,
+       count(*)
+from trips
+group by user_type, year;
+
+--
+
+-- REVISITING THE 'bike_id' string length summary
+select distinct bike_id
+from trips;
+
+-- I wonder if I could check out the first instance of the bike_id appearing the the data set
+-- And then seeing if there's a trend seen over time
+-- There's a use for window function there
+
+-- PSEUDOCODE
+/*
+ Something like...
+ Select first occurrence of bike-id of the window of the entire data set
+ but also show the year afterwards
+ */
+
+-- It's actually a bit simpler
+select distinct on (bike_id) *
+from
+    (
+select *
+from trips
+where bike_id is not null
+order by trip_id
+collate "numeric") as t0;
+
+-- Try to optimize the query seen above
+
+select *
+from distinct_bike_id
+order by trip_id
+collate "numeric";
+-- Not sure how the curators want to approach the labelling of bike_id values but I'm not sure it'll pose
+-- Any issue down the road
+
+/*
+ NOTE:
+ - This concludes the first cycle/round of data profiling
+ - Many of the characteristics or issues in the data set have been logged in the data dictionary markdown document
+ - The TODO list seen below was grabbed from this document
+ - I'm going to make a separate SQL for the preliminary cleaning
+ - And I'll also create a script for the load and cleaning, test of future data to be loaded to the warehouse
+ - ￼￼￼TODO
+￼￼￼￼￼ Collate ￼￼trip_id￼￼ and save as the new default state of the table
+￼￼￼￼￼ Drop duplicate ￼￼trip_id￼￼ rows
+￼￼￼￼￼ Investigate issue with ￼￼year￼￼ value in the ￼￼timestamp￼￼ fields; Re: Change ￼￼0017￼￼ to ￼￼2017￼￼
+￼￼￼￼￼ Drop rows with null trip duration, this accounts for about 0.07% of the data, doesn't seem to useful in gleaning insights of bike ridership
+￼￼￼￼￼ Impute correct station id values in 2017 data
+￼￼￼￼￼ Import correct station name for
+￼￼￼￼￼ Impute missing start and end station values in the data set
+￼￼￼￼￼ Note in the documentation that there is missing ￼￼bike_id￼￼ values for the years 2017 and 2018
+￼￼￼￼￼ In addition, it would be helpful to highlight what steps I took to clean the data and why
+￼￼￼￼￼ See bike share programs in other jurisdictions carry out their service
+￼￼￼￼￼ Consolidate ￼￼user_type￼￼ values to ￼￼annual￼￼ and ￼￼casual￼￼ (under the assumption that annual means that they are an annual member, and casual means that they used a daily or short-term pass for the trip)
+￼￼￼￼￼ Include this in the data dictionary
+ */
