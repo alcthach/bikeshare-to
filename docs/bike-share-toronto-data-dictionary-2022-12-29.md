@@ -1,6 +1,7 @@
 ## Data Dictionary
 alcthach@gmail.com
-[[2022-12-29]]
+
+#TODO:  Needs to be updated to reflect an actual data dictionary format Re: Not to include all the quality, documentation, profiling notes.
 
 ---
 
@@ -272,18 +273,143 @@ This last chart is a bit strange, wonder if the 2019 and 2020 data are similar t
 
 Something to explore on Monday perhaps.
 
+[[2023-01-09]] 09:36
+
+I'll need to figure out 
+
+## Profiling `bike_id`
+- There are about 7k distinct bike IDs in the fleet
+- However, I'll need to make an assumption here about whether all bikes in the fleet have a bike ID
+- Would make sense in terms of inventory, maintenance, operations, etc.
+- So I might assume that this measure was introduced later on into the data set
+- The issue is that I won't be able to glean any insights where bike ID information is not available
+- Also it's a bit strange that I have `<null>` values in this field, but not in the start or end station it seems
+	- I think it might be because of the way the raw data came in
+	- When I was loading this data I had to impute the null values to match the dimensions of the destination table `trips`
+	- However, I think the raw data that came in with missing start and end station values already had string literals 'NULL' in those rows
+- Going back to which years are missing bike ID data, I don't have data for 2017 and 2018, this means that I won't be able to speak to the patterns in where some of these bikes are going to and from in the network
+
+### Validity
+- What makes a value in `bike_id` valid
+- I guess it'll depend on the process that the data curators took
+- But for now I can profile this field some more to look at formatting, values this field takes on, etc.
+
+### Taking a look at the distribution of `bike_id` string length 
+
+| bike\_id\_string\_length | count |
+| :--- | :--- |
+| 2 | 84 |
+| 3 | 886 |
+| 4 | 6152 |
+| null | 1 |
+
+- `null` make sense as I've grouped the `null` values all together
+- However, I'm a bit wary of the smaller string lengths
+- 4 seems acceptable but the small number of string length 2 and perhaps 3 makes me wonder if there was a data entry issue
+- I think the paranoia stems from the mis-indexed columns I saw from my first run at this program
+- I'll look to see if there is a particular pattern with the string length and time
+
+Getting a bit blocked on multiple windows in a query
+```sql
+SELECT sum(salary) OVER w, avg(salary) OVER w
+  FROM empsalary
+  WINDOW w AS (PARTITION BY depname ORDER BY salary DESC);
+```
+
+Trying to make sense of this.
+https://www.postgresql.org/docs/current/tutorial-window.html
+
+- The author has initialized a window or a virtual table, each being `depname` ordered by `salary DESC`
+- In the select statement found in the first line, there are two clauses that call the  window function...
+- Calling the functions `sum` and `average` `OVER` the window, `w`
+
+- Don't quite think I'm in the same pattern with my use case
+- It seems like I have two windows, both the year and the bike_id string length
+- The first window needs to be year, following that it'll need to be the bike_id string length
+- I'll have to see if the postgres docs offers any insight into this
+
+- Maybe `WINDOW w0 AS (PARTITION BY year)` and `WINDOW w1 AS (PARTITION BY bike_id_string_length)`?
+
+Going to take a break and come back to this after
+
+[[2023-01-10]]
+
+10:07
+
+Going to spend minimal time on this issue. 
+- I also took a quick look at `trip_id` string length values across years just to make sure nothing strange is going on
+- The string length increases throughout the years which I think convention would expect
+- Re: As the number of trips increases the digits or number of characters needed to represent the `trip_id` would also increase
+
+## Looking at membership type
+
+| user\_type | count |
+| :--- | :--- |
+| Annual Member | 8705682 |
+| Casual | 327584 |
+| Casual Member | 6007296 |
+| Member | 1164784 |
+
+- I guess it might be okay to consolidate under 2 values? Annual and casual?
+- I'll have to take a look at the data dictionary and the website for some background info
+- So the website provides no mention of casual membership
+- Wondering if casual membership means that they've only purchased a pass
+- The casual member is likely using a short-term pass rather than an annual membership
+
+### A Break-Down of Membership Types by Year
+
+| user\_type | year | count |
+| :--- | :--- | :--- |
+| Annual Member | 2018 | 1572980 |
+| Annual Member | 2019 | 1859391 |
+| Annual Member | 2020 | 1448613 |
+| Annual Member | 2021 | 2140730 |
+| Annual Member | 2022 | 1683968 |
+| Casual | 0017 | 41141 |
+| Casual | 2017 | 286443 |
+| Casual Member | 2018 | 349975 |
+| Casual Member | 2019 | 580126 |
+| Casual Member | 2020 | 886252 |
+| Casual Member | 2021 | 1434452 |
+| Casual Member | 2022 | 2756491 |
+| Member | 0017 | 322263 |
+| Member | 2017 | 842521 |
+
+Nothing unusual here. It's nice to see that they have membership information in 2017 as well. I think it's pretty important information to have to ensure the we can glean insights from how casual and annual members use the service.
+
+
+## Re-Visiting `bike_id` I'm not sure if there are any issues with this field
+- I don't think there would be a relationship between `bike_id` and time
+- Re: I don't see much value in a incremental index of `bike_id` as a function of time
+- I.E. Grab a bike and give it a value that doesn't already exist
+- Being careful to ensure that there are no duplicate bike IDs
+- To ensure proper measurement, especially when bikes are not returned to the stations, on time, or at all
+- But I'd imagine that because the bike trip is linked to credit card information, there is an incentive for the customer to return the bike on time
+- Because of this I'm not going to explore the field any further
+
+Just going to move forward an work on the tasks under the TODO heading seen below
+
 ---
 
 # TODO
+- [ ] Collate `trip_id` and save as the new default state of the table
 - [ ] Drop duplicate `trip_id` rows
 - [ ] Investigate issue with `year` value in the `timestamp` fields; Re: Change `0017` to `2017`
 - [ ] Drop rows with null trip duration, this accounts for about 0.07% of the data, doesn't seem to useful in gleaning insights of bike ridership
 - [ ] Impute correct station id values in 2017 data
 - [ ] Import correct station name for 
+- [ ] Impute missing start and end station values in the data set
+- [ ] Note in the documentation that there is missing `bike_id` values for the years 2017 and 2018
+- [ ] In addition, it would be helpful to highlight what steps I took to clean the data and why
+- [ ] See bike share programs in other jurisdictions carry out their service
+- [ ] Consolidate `user_type` values to `annual` and `casual` (under the assumption that annual means that they are an annual member, and casual means that they used a daily or short-term pass for the trip)
+- [ ] Include this in the data dictionary
 
 # INBOX
-- Would be kind of fun to do a network graph of how the bikes travel throughout the network as well
+- Would be kind of fun to do a network graph of how the bikes travel throughout the network as well; using `bike_id` and station data, maybe timestamp as well, it would be fun to tell a story of the farther travelled bike
+	- It's also good to keep in mind that the maintenance crew might also be moving bikes so if there are some gaps or discontinuities it might suggest that the operations team might moved the bike around for some reason or other
 - Connecting TTC delay data would be fun as well
+- Included overage fee schedule as well; this schedule disincentivizes longer overages by increasing overage fee as a function of time
 
 https://www.dataversity.net/data-cleansing-why-its-important/
 
