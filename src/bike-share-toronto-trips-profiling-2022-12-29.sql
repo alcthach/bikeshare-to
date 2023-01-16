@@ -586,3 +586,18 @@ collate "numeric";
 ￼￼￼￼￼ Consolidate ￼￼user_type￼￼ values to ￼￼annual￼￼ and ￼￼casual￼￼ (under the assumption that annual means that they are an annual member, and casual means that they used a daily or short-term pass for the trip)
 ￼￼￼￼￼ Include this in the data dictionary
  */
+
+-- From what I remember, I think I wrote the sorted 'trip_id' to a new table
+
+-- Sanity check
+
+select *
+from trips_clean
+limit 5;
+    -- Yes, looks good.
+
+-- Drop duplicate rows
+
+select *
+from trips_clean
+where trip_id like trips_clean.trip_id;
