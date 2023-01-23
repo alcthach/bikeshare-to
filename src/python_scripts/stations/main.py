@@ -26,7 +26,7 @@ def main():
     for station in station_data:
         if count == 0:
 
-            header = station.keys()
+            header = unique_keys(station_data) 
             csv_writer.writerow(header)
             count += 1
 
@@ -40,13 +40,14 @@ from itertools import chain
 
 # Function to print all unique keys
 # present in a list of dictionaries
-def UniqueKeys(arr):
+def unique_keys(arr):
 
-	# Stores the list of unique keys
-	res = list(set(chain.from_iterable(sub.keys() for sub in arr)))
+    # Stores the list of unique keys
+    res = list(set(chain.from_iterable(sub.keys() for sub in arr)))
 
-	# Print the list
-	print(str(res))
+    # Print the list
+    # print(str(res))
+    return res
 
 
 
