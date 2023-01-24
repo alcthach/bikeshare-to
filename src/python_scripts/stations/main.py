@@ -5,9 +5,6 @@ from itertools import chain
 
 url = 'https://tor.publicbikesystem.net/ube/gbfs/v1/en/station_information'
 
-data_file = open('data_file.csv', 'w')
-
-csv_writer = csv.writer(data_file)
 
 def get_object():
     r = requests.get(url)
@@ -18,39 +15,36 @@ def get_station_data():
     station_data = get_object()['data']['stations']
     return station_data
 
-def main():
-    count = 0
+def get_header(arr):
+    header = list(set(chain.from_iterable(sub.keys() for sub in arr)))
+    return header
+
+def write_header_to_csv():
+    with open('stations.csv', 'w', newline='') as csvfile:
     
-    station_data = get_station_data()
+        header_writer = csv.writer(csvfile)
+        # The line below could use some revising after 
+        header_writer.writerow(get_header(get_station_data()))
 
-    for station in station_data:
-        if count == 0:
+# Let's clean this up a bit by doing this
+def write_dicts_to_csv():
+    with open('stations.csv', 'a', newline='') as csvfile:
 
-            header = unique_keys(station_data) 
-            csv_writer.writerow(header)
-            count += 1
+        fieldnames = get_header(get_station_data())
 
-        csv_writer.writerow(station.values())
+        stations_writer = csv.DictWriter(csvfile, restval = 'null', fieldnames = fieldnames)
 
-    data_file.close()
+        stations = get_station_data()
 
-# Python3 program for the above approach
-from itertools import chain
+        stations_writer.writerows(stations)
 
-
-# Function to print all unique keys
-# present in a list of dictionaries
-def unique_keys(arr):
-
-    # Stores the list of unique keys
-    res = list(set(chain.from_iterable(sub.keys() for sub in arr)))
-
-    # Print the list
-    # print(str(res))
-    return res
-
-
-
+def main():
+    write_header_to_csv()
+    write_dicts_to_csv()
+    
+    # It appears these functions over-write rather than append to the file
+    # However, it seems like the null values might have been imputed correctly
+    
 if __name__ == "__main__":
     main()
 
