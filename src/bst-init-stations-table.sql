@@ -1,17 +1,20 @@
 create table if not exists bst_stations
 (
-	station_id		varchar,
-	name			varchar,
 	physical_configuration	varchar,
-	lat			float,
+	rental_uris		varchar,
 	lon			float,
+	cross_street		varchar,
+	groups			varchar,
+	nearby_distance		float,
+	name			varchar,
 	altitude		float,
 	address			varchar,
-	capacity		integer,
 	is_charging_station	boolean,
+	capacity		integer,
+	lat			float,
+	_ride_code_support	boolean,
 	rental_methods		varchar,
-	groups			varchar,
+	post_code		varchar,
 	obcn			varchar,
-	nearby_distance		float,
-	_ride_code_support	boolean
+	station_id		varchar
 )
