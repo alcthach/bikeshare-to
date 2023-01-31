@@ -66,3 +66,48 @@ group by year;
 
 select count(*)
 from trips_clean;
+
+-- add to readme work on data documentation in spare time i do alot as a kin thats a strength
+
+select *
+from trips_clean
+where start_station_name like 'NULL'
+order by trip_start_time ASC;
+
+select count(*) as start_station_nulls
+from trips_clean
+where start_station_name like 'NULL';
+
+select count(*)/160000::float as pct_station_name_nulls
+from trips_clean
+where end_station_name like 'NULL' or start_station_name like 'NULL';
+
+-- delete script for missing nulls, note this can only be run after I've imputed the missing stn names
+-- TODO: Include condition where the engine checks to see if the idea is found in `bst_stations`
+-- if no, feel free to drop the row, if yes please impute the w/ the corresponding name
+
+delete from trips_clean
+where end_station_name like 'NULL' or start_station_name like 'NULL';
+
+-- sanity check
+select *
+from trips_clean
+where start_station_name like 'NULL' or
+      end_station_name like 'NULL';
+
+-- ALL DONE!
+
+-- Going to check my todo list from a while back to see if there's anything outstanding
+-- this is likely the first stage of profiling, cleaning, transforming data, but it's an important milestone
+
+-- consolidate member values
+select user_type,
+       count(*)
+from trips_clean
+group by user_type;
+
+-- for next session:
+-- initialize a new column or use case when
+-- call the new field `is_annual_member` is boolean
+-- true when customer is an annual member, if false, the cx is assumed to be a casual member
+
