@@ -111,3 +111,36 @@ group by user_type;
 -- call the new field `is_annual_member` is boolean
 -- true when customer is an annual member, if false, the cx is assumed to be a casual member
 
+-- todo add to final script
+alter table trips_clean
+add column if not exists is_annual_member boolean;
+
+select is_annual_member
+from trips_clean;
+
+select
+    user_type,
+    case when user_type ~ '^Casual.*' then FALSE
+        else true
+    end is_annual_member
+from trips_clean
+where user_type like 'Casual';
+    -- Wait, what's going on here?
+    -- It might be the regex expression actually
+    -- What '^Casual.' means is that there is a character that precedes the character 'l'
+    -- Either I find a way to have an optional character or revise the regexp expression to be 'Casua.'
+    -- It's a bit hacky but effective
+    -- Needed that * as a modifier Re: 0 or more characters, covers both 'Casual' and 'Casual Member'
+
+-- try to persist the changes
+
+update trips_clean
+set is_annual_member =
+    case when user_type ~ '^Casual.*' then FALSE
+         else true
+    end
+where trip_id = trip_id;
+
+select count(*)
+from trips_clean;
+
