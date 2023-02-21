@@ -144,3 +144,93 @@ where trip_id = trip_id;
 select count(*)
 from trips_clean;
 
+-- Imputing missing values for start/end station ids in 2017
+update trips_clean
+set start_station_id = bst_stations.station_id
+from bst_stations
+where trips_clean.start_station_id is null and trips_clean.start_station_name = bst_stations.name;
+
+update trips_clean
+set end_station_id = bst_stations.station_id
+from bst_stations
+where trips_clean.end_station_id is null and trips_clean.end_station_name = bst_stations.name;
+
+-- I'm wondering if some of the station names don't match between the two tables
+-- A bit of a logic error on my part, the filters in the where statement were in the reverse order
+-- I'll have to take a look at the remaining rows with null id values
+
+select *
+from trips_clean
+where start_station_id is null;
+
+-- AKA have to see if there is a matching station name in bst_stations
+
+select *
+from bst_stations
+join trips_clean on start_station_name = bst_stations.name
+where start_station_id is null;
+
+-- This tells me the remaining null values don't have a corresponding entry in bst_stations
+
+select start_station_name, count(*)
+from trips_clean
+where start_station_id is null
+group by start_station_name;
+
+select *
+from bst_stations
+where name ~ 'Seaton.';
+
+select count(*)/160000::float as percent_nulls
+from trips_clean
+where start_station_id is null;
+
+-- What might be happening it that the join is trying to match character-by-character
+-- And in 2017, the station names appear to be incomplete based on some of the single-case scenarios I've seen
+-- For example, 'Seaton St / Dundas St E - SMART' and the 2017 version, 'Seaton St / Dundas St E'
+
+select count(*)
+from
+    (
+select start_station_name, count(*)
+from trips_clean
+where start_station_id is null
+group by start_station_name) as t0;
+
+-- 58 station names that are not in the bst_stations table
+-- However, some of them might actually be a semantic match, so best to see if I can find the correct IDs
+-- Not sure if it's going to involve some sort of percent match
+-- Actually it's probably better to use some sort of semantic regex matching
+-- In plain English, if the string found in `trips.clean` match is found in `bst_stations`, then impute the
+-- matching ID
+-- Probably best to try and print this out first...
+
+select count(*)
+    from
+(select name,
+        start_station_name
+ from bst_stations
+          join trips_clean on textcat('%', textcat(trips_clean.start_station_name, '%')) like
+                              textcat('%', textcat(bst_stations.name, '%'))
+ where trips_clean.start_station_id isnull) as t0;
+
+-- I think there might be something going on with my join, I'm short 200000 rows
+
+select *
+from trips_clean
+join bst_stations on textcat('%', textcat(start_station_name, '%')) like textcat('%', textcat(bst_stations.name, '%'))
+where start_station_id isnull;
+
+select count(*)
+from trips_clean
+where start_station_id isnull;
+
+
+select count(*)
+from trips_clean
+join bst_stations on start_station_name like textcat(bst_stations.name, '%')
+where start_station_id isnull;
+
+-- Hold on, I think that might have worked, but I'm not sure why
+-- It might be because the regex operator might be less restrictive than the `LIKE` operator
+-- I'll see what the row count looks like before jumping to conclusions
