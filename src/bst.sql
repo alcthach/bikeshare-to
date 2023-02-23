@@ -234,3 +234,240 @@ where start_station_id isnull;
 -- Hold on, I think that might have worked, but I'm not sure why
 -- It might be because the regex operator might be less restrictive than the `LIKE` operator
 -- I'll see what the row count looks like before jumping to conclusions
+
+select start_station_name,
+       name
+from trips_clean
+join bst_stations on textcat('%', textcat(start_station_name, '%')) like textcat('%', textcat(bst_stations.name, '%'))
+where start_station_id is null;
+
+-- I'll take some time to understand the pattern that I'd want to employ
+-- I think part of it is find the logic that I'll need to help the engine decide when a suitable match is found
+-- For example, is it going to be 'if bst_station.name found in trips_clean.start_station_name?'
+-- I.E. what is the difference between the fields, is there a pattern found between the fields that I can use?
+
+select count(*)
+from trips_clean
+         join bst_stations on textcat('%', textcat(start_station_name, '%')) like textcat('%', textcat(bst_stations.name, '%'))
+where start_station_id is null;
+
+-- I mean, the join statement IS the pattern I'd want to employ...
+-- It says find the rows that make with each value suffixed and prefixed with wildcards
+-- My concern is that I don't know why I appear to be missing so many values
+
+select count(*)
+from trips_clean
+where start_station_id is null;
+
+-- I'll need to employ right join instead to see what might be happening here
+
+select start_station_name,
+       name
+    from
+        (
+select start_station_name
+from trips_clean
+where start_station_id is null) as t0
+join bst_stations on textcat('%', textcat(start_station_name, '%')) like textcat('%', textcat(bst_stations.name, '%'));
+
+select *
+from bst_stations
+where name like '%Widmer%';
+
+-- There is a `Widmer St / Adelaide St W` in `trips_clean`
+-- But there not in `bst_stations`, only 'Widmer St / King St W' exists, which is nearly in the same location
+-- The textcat pattern does well for matching the entire string, however, I'm running into issues with partial matches
+-- This is a bit more complex
+-- I guess I can take a look at the fundamental patterns and then slowly work through the data
+-- One pattern at a time...
+-- split_part() might be useful
+-- Also naming the different patterns
+-- So far I see exact string matches and partial, first substring delimiter ' ' match
+
+-- Let's match by substring
+select start_station_name,
+       name
+from
+    (
+        select start_station_name
+        from trips_clean
+        where start_station_id is null) as t0
+    join bst_stations on split_part(start_station_name, ' ', 1) like split_part(bst_stations.name, ' ', 1);
+-- Not restrictive enough
+
+select distinct on (start_station_name) start_station_name, name, station_id
+from
+    (
+        select start_station_name
+        from trips_clean
+        where start_station_id is null) as t0
+        join bst_stations on textcat('%', textcat(start_station_name, '%')) like textcat('%', textcat(bst_stations.name, '%'));
+
+-- Alright so this is something to #key in on, I have 4 stations that match a specific pattern using the query found about
+select count(*)
+from
+    (
+        select start_station_name
+        from trips_clean
+        where start_station_id is null) as t0
+        join bst_stations on textcat('%', textcat(start_station_name, '%')) like textcat('%', textcat(bst_stations.name, '%'));
+
+-- TODO refactor
+update trips_clean
+set start_station_id = bst_stations.station_id
+from bst_stations
+where trips_clean.start_station_id is null and textcat('%', textcat(start_station_name, '%')) like textcat('%', textcat(bst_stations.name, '%'));
+
+-- TODO refactor
+update trips_clean
+set end_station_id = bst_stations.station_id
+from bst_stations
+where trips_clean.end_station_id is null and textcat('%', textcat(end_station_name, '%')) like textcat('%', textcat(bst_stations.name, '%'));
+
+-- Getting another head coun
+select start_station_name, count(*)
+from trips_clean
+where start_station_id is null
+group by start_station_name;
+
+-- Let's use '/' as a delimiter to see if anything is happening...
+
+select start_station_name,
+       name
+from
+    (
+        select start_station_name
+        from trips_clean
+        where start_station_id is null) as t0
+        join bst_stations on textcat('%', textcat(start_station_name, '%')) like split_part(bst_stations.name, '-', 1);
+
+select start_station_name,
+       name
+from
+    (
+        select start_station_name
+        from trips_clean
+        where start_station_id is null) as t0
+        join bst_stations on start_station_name like split_part(bst_stations.name, '-', 1);
+
+select count(*)
+    from
+(select start_station_name
+from trips_clean
+where start_station_id is null
+group by start_station_name) as t0
+
+
+select count(*)
+from bst_stations;
+
+-- 54 start station names are not readily found in bst_stations
+
+select count(*)
+from
+    (
+        select start_station_name
+        from trips_clean
+        where start_station_id is null) as t0
+        join bst_stations on split_part(start_station_name, ' ', 1) like split_part(bst_stations.name, ' ', 1) and
+                             split_part(start_station_name, ' ', 2) like split_part(bst_stations.name, ' ', 2) and
+                             split_part(start_station_name, ' ', 3) like split_part(bst_stations.name, ' ', 3) and
+                             split_part(start_station_name, ' ', 4) like split_part(bst_stations.name, ' ', 4) and
+                             split_part(start_station_name, ' ', 5) like split_part(bst_stations.name, ' ', 5);
+-- 95886 rows
+-- wrong pattern, needs to count from left, or include all...
+
+select count(*)
+from trips_clean
+where start_station_id is null;
+
+select distinct on (name)
+       name,
+       start_station_name,
+       station_id
+from
+    (
+        select start_station_name
+        from trips_clean
+        where start_station_id is null) as t0
+        join bst_stations on split_part(start_station_name, ' ', 1) like split_part(bst_stations.name, ' ', 1) and
+                             split_part(start_station_name, ' ', 2) like split_part(bst_stations.name, ' ', 2) and
+                             split_part(start_station_name, ' ', 3) like split_part(bst_stations.name, ' ', 3) and
+                             split_part(start_station_name, ' ', 4) like split_part(bst_stations.name, ' ', 4) and
+                             split_part(start_station_name, ' ', 5) like split_part(bst_stations.name, ' ', 5)
+                             where name like '%SMART%';
+
+
+-- TODO refactor re: impute station ids
+update trips_clean
+set start_station_id = bst_stations.station_id
+from bst_stations
+where start_station_id is null and
+    split_part(start_station_name, ' ', 1) like split_part(bst_stations.name, ' ', 1) and
+    split_part(start_station_name, ' ', 2) like split_part(bst_stations.name, ' ', 2) and
+    split_part(start_station_name, ' ', 3) like split_part(bst_stations.name, ' ', 3) and
+    split_part(start_station_name, ' ', 4) like split_part(bst_stations.name, ' ', 4) and
+    split_part(start_station_name, ' ', 5) like split_part(bst_stations.name, ' ', 5) and
+    name like '%SMART%';
+
+
+-- TODO refactor re: impute station ids
+update trips_clean
+set start_station_id = bst_stations.station_id
+from bst_stations
+where start_station_id is null and
+        split_part(start_station_name, ' ', 1) like split_part(bst_stations.name, ' ', 1) and
+        split_part(start_station_name, ' ', 2) like split_part(bst_stations.name, ' ', 2) and
+        split_part(start_station_name, ' ', 3) like split_part(bst_stations.name, ' ', 3) and
+        split_part(start_station_name, ' ', 4) like split_part(bst_stations.name, ' ', 4) and
+        split_part(start_station_name, ' ', 5) like split_part(bst_stations.name, ' ', 5) and
+        start_station_name like '%Capreol%';
+-- 8773 rows
+
+select *
+from trips_clean
+where start_station_name like '%Capreol%'
+and start_station_id is null
+and split_part(trip_start_time::varchar, '-', 1) like '2017';
+
+
+select start_station_name,
+       count(*)
+from trips_clean
+where start_station_id is null
+group by start_station_name;
+
+select start_station_name
+from trips_clean
+where start_station_id is null and
+      start_station_name like '%SMART%'
+group by start_station_name;
+
+-- I have some other SMART stations that might need to be imputed as well...
+select distinct on (start_station_name)
+    start_station_name,
+       name
+from
+    (
+        select start_station_name
+        from trips_clean
+        where start_station_id is null and
+              start_station_name like '%SMART%') as t0
+        join bst_stations on split_part(start_station_name, ' ', 1) like split_part(bst_stations.name, ' ', 1) and
+                             split_part(start_station_name, ' ', 2) like split_part(bst_stations.name, ' ', 2);
+    split_part(start_station_name, ' ', 3) like split_part(bst_stations.name, ' ', 3) and
+                             split_part(start_station_name, ' ', 4) like split_part(bst_stations.name, ' ', 4);
+    split_part(start_station_name, ' ', 5) like split_part(bst_stations.name, ' ', 5)
+
+select start_station_name,
+       count(*)
+from trips_clean
+where trips_clean.start_station_id is null
+group by start_station_name;
+
+select count(*)
+from trips
+where trips.start_station_id is null;
+
+select name
+from bst_stations;
