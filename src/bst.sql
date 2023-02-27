@@ -471,3 +471,109 @@ where trips.start_station_id is null;
 
 select name
 from bst_stations;
+
+
+-- Manually Cross-Comparing start station name w/ Null Values station IDs with `bst_stations`
+
+-- Adelaide and bay SMART
+select name
+from bst_stations
+where name like 'Adelaide%';
+    -- can't impute ids
+
+-- base station
+select name
+from bst_stations
+where name like '%base%';
+    -- can't impute ids
+
+-- bath and queens quay
+select name
+from bst_stations
+where name like '%Bathurst%'
+order by name asc;
+    -- possibly imputable, also listed as Bathurst St/Queens Quay(Billy Bishop Airport) in `bst_stations`
+
+-- bay and bloor
+select name
+from bst_stations
+where name like '%Bay%'
+order by name;
+    -- not sure if imputable, Re: there are now two stations on the E/W corners of the intersection
+    -- might have to leave this as is
+
+-- Also, let me make a macro or stored procedure so I don't have to repeat myself moving forward!
+
+create or replace function check_station_name(station_name varchar)
+    returns table(
+    name varchar
+    )
+language plpgsql
+as
+    $$
+    begin
+    return query(
+    select bst_stations.name
+    from bst_stations
+    where bst_stations.name like station_name
+    order by bst_stations.name
+    );
+    end;
+    $$;
+
+select * from check_station_name('%Beverley%');
+    -- There are some typos in 2017 data
+    -- Mis-spelled, 'beverly' instead of 'beverley'
+    -- todo correct this and impute the correct IDs
+
+select start_station_name,
+       count(*)
+from trips_clean
+where start_station_name like '%Bever%'
+group by start_station_name;
+    -- Also, there is no 'Beverly St / College St W' in `bst_stations`
+
+-- Bloor GO / UP Station \(West Toronto Railpath\)
+select * from check_station_name('%Rail%');
+    -- not imputable, looks like this station is situated north of the up station
+    -- looking @ https://bikesharetoronto.com/system-map/
+    -- there is no bike share station at bloor go up station...
+
+-- bloor and brunswick ave
+select * from check_station_name('%Bloor%');
+    --  can't impute
+    --  nearest station is Dalton Rd / Bloor St W but don't feel comfortable imputing the related stn ID
+
+-- bloor and borden (near bloor and bathurst)
+-- using query above, couldn't find a semantic match
+-- can't impute
+
+-- boston ave and queen st e, NO
+select * from check_station_name('%Boston%');
+
+-- bremner blvd and spadina ave, NO
+select * from check_station_name('%Brem%');
+
+-- castle frank station, NO
+select * from check_station_name('%Castle%');
+
+-- dockside dr and queens quay e, NO
+select * from check_station_name('%Quay%');
+
+-- east liberty st and pirandello st, NO
+select * from check_station_name('%Liberty%');
+select * from check_station_name('%Pirandello%');
+
+-- fringe next stage, NO
+select * from check_station_name('%Fringe%)');
+
+select * from check_station_name();
+
+
+
+
+
+
+-- todo write in pseudocode when I'm back from break
+-- another time will also do
+-- I'll try to pass any argument in next...
