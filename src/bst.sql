@@ -577,3 +577,102 @@ select * from check_station_name();
 -- todo write in pseudocode when I'm back from break
 -- another time will also do
 -- I'll try to pass any argument in next...
+
+
+-- I think I finished with null start station times yesterday. I'll take a look at end station names today...
+
+-- I wonder if they match up..
+
+select end_station_name,
+       count(*)
+from trips_clean
+where end_station_id is null
+group by end_station_name;
+-- These all look familiar
+
+-- List of stations exclusive to end_station_name nulls:
+
+-- Essex St / Christie St
+-- It exists, but maybe with a 'SMART' prefix
+
+-- Fort York / Capreol Crt, possible typo on 'Crt'
+-- Might exist with Capreol Ct not Crt
+
+-- Simcoe St / Dundas St W
+-- Doesn't exist, however there is one at dundas st w / st. patrick st
+
+-- Spadina Ave / Sussex Ave
+-- Might exist under 'SMART' prefix
+
+-- University Ave / Gerrard St W
+-- Might exist under 'SMART prefix'
+
+
+-- University Ave / King St W
+-- Might exist under 'SMART' prefix
+
+-- Didn't do this programmatically, decided to brute force it
+-- I'm going to run the above stations through the bst station locator
+-- Alright so the notes are all found above
+
+-- I'll make a separate script for all the nulls, and then maybe refactor, or just have a bash or
+-- python script run each module, just to make it easier review and extend if need
+
+/*
+ ATTN: The following queries below will be used to update the missing start/end station IDs
+ Please re-factor as part of the production script
+ */
+
+update trips_clean
+set start_station_name =
+        case
+            when start_station_name like 'Beverly St / College St' then 'Beverley St / College St'
+            when start_station_name like 'Beverly  St / Dundas St W' then 'Beverley  St / Dundas St W'
+            when start_station_name like 'Lakeshore Blvd W / Ellis Ave' then 'Lake Shore Blvd W / Ellis Ave'
+            when start_station_name like 'Lakeshore Blvd W / The Boulevard Club' then 'Lake Shore Blvd W / The Boulevard Club'
+            when start_station_name like 'Lansdowne Subway Green P' then 'Lansdowne Subway Station'
+            when start_station_name like 'Lower Jarvis St / The Esplanade' then 'Lower Jarvis / The Esplanade'
+            when start_station_name like 'Queen St E / Berkely St' then 'Queen St E / Berkeley St'
+            when start_station_name like 'Woodbine Subway Green P (Cedarvale Ave)' then 'Woodbine Subway Green P SMART'
+            when start_station_name like 'York St / King St W - SMART' then 'King St W / York St'
+end
+where start_station_id is null;
+
+--
+-- Great. [2023-03-06 11:50:07] 217,033 rows affected in 7 s 62 ms
+
+update trips_clean
+set end_station_name =
+       case
+           when end_station_name like 'Beverly St / College St' then 'Beverley St / College St'
+           when end_station_name like 'Beverly  St / Dundas St W' then 'Beverley  St / Dundas St W'
+           when end_station_name like 'Lakeshore Blvd W / Ellis Ave' then 'Lake Shore Blvd W / Ellis Ave'
+           when end_station_name like 'Lakeshore Blvd W / The Boulevard Club' then 'Lake Shore Blvd W / The Boulevard Club'
+           when end_station_name like 'Lansdowne Subway Green P' then 'Lansdowne Subway Station'
+           when end_station_name like 'Lower Jarvis St / The Esplanade' then 'Lower Jarvis / The Esplanade'
+           when end_station_name like 'Queen St E / Berkely St' then 'Queen St E / Berkeley St'
+           when end_station_name like 'Woodbine Subway Green P (Cedarvale Ave)' then 'Woodbine Subway Green P SMART'
+           when end_station_name like 'York St / King St W - SMART' then 'King St W / York St'
+           when end_station_name like 'Essex St / Christie St' then 'Essex St / Christie St - SMART'
+           when end_station_name like 'Fort York  Blvd / Capreol Crt' then 'Fort York  Blvd / Capreol Ct'
+           when end_station_name like 'Spadina Ave / Sussex Ave' then 'Spadina Ave / Sussex Ave - SMART'
+           when end_station_name like 'University Ave / King St W' then 'University Ave / King St W - SMART'
+           end
+where end_station_id is null;
+
+-- Looks good too, [2023-03-06 11:56:05] 258,498 rows affected in 7 s 720 ms
+
+-- I'll do a sanity check to ensure the station names that I didn't update should have been left alone
+
+select start_station_name, count(*)
+from trips_clean
+where start_station_id is null
+group by start_station_name;
+
+-- Ouff, I just borked my data.
+-- I should have left an `else then end_station_name` to make sure that my rows were still intact
+-- Oops!
+-- It's almost break time for me so when I come back, I think it'll be a good time to put together my
+-- production script
+-- I kind of forced my own hand here, but it needs to be done eventually!
+
