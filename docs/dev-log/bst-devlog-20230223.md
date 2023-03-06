@@ -117,56 +117,56 @@ Might be worth taking a look at the end station names as well.
 - At this point it's down to about 200k rows
 - It's been a bit frustrating trying to work through the this subset of the data
 - However, part of it is likely due to my lack of patient
-- But I'm holding onto to a fair amount of the data.
+- But I'm holding onto tpo a fair amount of the data.
 - Just have about 200k rows to profile
-| start\_station\_name | count |
-| :--- | :--- |
-| Adelaide St W / Bay St - SMART | 3159 |
-| Base Station | 2 |
-| Bathurst St / Queens Quay W | 6942 |
-| Bay St / Bloor St W | 7166 |
-| Bay St / Davenport Rd | 1969 |
-| Beverly St / College St | 6646 |
-| Beverly  St / Dundas St W | 9029 |
-| Bloor GO / UP Station \(West Toronto Railpath\) | 1458 |
-| Bloor St / Brunswick Ave | 5514 |
-| Borden St / Bloor St W - SMART | 1425 |
-| Boston Ave / Queen St E | 2795 |
-| Bremner Blvd / Spadina Ave | 6243 |
-| Castle Frank Station | 1072 |
-| Dockside Dr / Queens Quay E \(Sugar Beach\) | 8183 |
-| East Liberty St / Pirandello St | 6847 |
-| Fringe Next Stage - 7219 | 36 |
-| Huron/ Harbord St | 4427 |
-| Lakeshore Blvd W / Ellis Ave | 1807 |
-| Lakeshore Blvd W / The Boulevard Club | 2098 |
-| Lansdowne Subway Green P | 1834 |
-| Lower Jarvis St / The Esplanade | 5411 |
-| Margueretta St / College St | 1169 |
-| Marlborough Ave / Yonge St | 1296 |
-| Michael Sweet Ave / St. Patrick St | 10786 |
-| Ontario Place Blvd / Remembrance Dr | 10994 |
-| Parliament St / Aberdeen Ave | 3498 |
-| Parliament St / Bloor St E | 1251 |
-| Princess St / Adelaide St E | 11186 |
-| Queens Park / Bloor St W | 5285 |
-| Queen St E / Berkely St | 1970 |
-| Queen St E / Larchmount Ave | 1991 |
-| Queen St W / Portland St | 11221 |
-| Queen St W / York St \(City Hall\) | 5753 |
-| Roxton Rd / College St | 2466 |
-| Scott St / The Esplanade | 6367 |
-| Simcoe St / Wellington St W | 14176 |
-| Stephenson Ave / Main St | 284 |
-| Stewart St / Bathurst St  - SMART | 2424 |
-| Summerhill Ave / MacLennan Ave - SMART | 201 |
-| University Ave / College St | 6038 |
-| Victoria St / Gould St \(Ryerson University\) | 6364 |
-| Wellesley St E / Yonge St \(Green P\) | 5853 |
-| Wellington St W / Portland St | 8242 |
-| Widmer St / Adelaide St W | 11422 |
-| Woodbine Subway Green P \(Cedarvale Ave\) | 310 |
-| York St / King St W - SMART | 2423 |
+| start\_station\_name                            | count | id_is_imputable | reason |
+|:----------------------------------------------- |:----- |:--------------- |:------ |
+| Adelaide St W / Bay St - SMART                  | 3159  | false           |        |
+| Base Station                                    | 2     |                 |        |
+| Bathurst St / Queens Quay W                     | 6942  |                 |        |
+| Bay St / Bloor St W                             | 7166  |                 |        |
+| Bay St / Davenport Rd                           | 1969  |                 |        |
+| Beverly St / College St                         | 6646  |                 |        |
+| Beverly  St / Dundas St W                       | 9029  |                 |        |
+| Bloor GO / UP Station \(West Toronto Railpath\) | 1458  |                 |        |
+| Bloor St / Brunswick Ave                        | 5514  |                 |        |
+| Borden St / Bloor St W - SMART                  | 1425  |                 |        |
+| Boston Ave / Queen St E                         | 2795  |                 |        |
+| Bremner Blvd / Spadina Ave                      | 6243  |                 |        |
+| Castle Frank Station                            | 1072  |                 |        |
+| Dockside Dr / Queens Quay E \(Sugar Beach\)     | 8183  |                 |        |
+| East Liberty St / Pirandello St                 | 6847  |                 |        |
+| Fringe Next Stage - 7219                        | 36    |                 |        |
+| Huron/ Harbord St                               | 4427  |                 |        |
+| Lakeshore Blvd W / Ellis Ave                    | 1807  | true            | typo       |
+| Lakeshore Blvd W / The Boulevard Club           | 2098  | true            |  typo      | 
+| Lansdowne Subway Green P                        | 1834  |                 |        |
+| Lower Jarvis St / The Esplanade                 | 5411  |                 |        |
+| Margueretta St / College St                     | 1169  |                 |        |
+| Marlborough Ave / Yonge St                      | 1296  |                 |        |
+| Michael Sweet Ave / St. Patrick St              | 10786 |                 |        |
+| Ontario Place Blvd / Remembrance Dr             | 10994 |                 |        |
+| Parliament St / Aberdeen Ave                    | 3498  |                 |        |
+| Parliament St / Bloor St E                      | 1251  |                 |        |
+| Princess St / Adelaide St E                     | 11186 |                 |        |
+| Queens Park / Bloor St W                        | 5285  |                 |        |
+| Queen St E / Berkely St                         | 1970  |                 |        |
+| Queen St E / Larchmount Ave                     | 1991  |                 |        |
+| Queen St W / Portland St                        | 11221 |                 |        |
+| Queen St W / York St \(City Hall\)              | 5753  |                 |        |
+| Roxton Rd / College St                          | 2466  |                 |        |
+| Scott St / The Esplanade                        | 6367  |                 |        |
+| Simcoe St / Wellington St W                     | 14176 |                 |        |
+| Stephenson Ave / Main St                        | 284   |                 |        |
+| Stewart St / Bathurst St  - SMART               | 2424  |                 |        |
+| Summerhill Ave / MacLennan Ave - SMART          | 201   |                 |        |
+| University Ave / College St                     | 6038  |                 |        |
+| Victoria St / Gould St \(Ryerson University\)   | 6364  |                 |        |
+| Wellesley St E / Yonge St \(Green P\)           | 5853  |                 |        |
+| Wellington St W / Portland St                   | 8242  |                 |        |
+| Widmer St / Adelaide St W                       | 11422 |                 |        |
+| Woodbine Subway Green P \(Cedarvale Ave\)       | 310   |                 |        |
+| York St / King St W - SMART                     | 2423  |                 |        |
 
 Representing 46 different stations. Something to consider is if there are any partial matches. In case stations were moved around in close vicinity of the original station.
 
@@ -177,3 +177,10 @@ I could also brute force it because there are 46 stations, out of a possible 635
 Some stations might not exist anymore, and some might have moved. In either case, I don't think I'll be able to impute any station IDs
 
 It's definitely not ideal to brute force check. But don't mind checking it out maybe tomorrow as a shallow work activity.
+
+Alright, things got pretty hacky. I ended up just running the station names through the bike share station locator
+
+I kept track of which values I can impute
+https://docs.google.com/spreadsheets/d/1K3efcCDfqiLW-bFebWn6ZY37Ixt9x6ZZyyda9Mh_Zm0/edit#gid=555467019
+
+I'll need to work on the end station names tomorrow...
